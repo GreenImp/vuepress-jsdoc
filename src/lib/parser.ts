@@ -4,10 +4,10 @@
  * headline: lib/parser.ts
  * ---
  */
-import fs from 'fs/promises';
 import jsdoc2md from 'jsdoc-to-markdown';
-import mkdirp from 'mkdirp';
-import { join, resolve } from 'path';
+import { mkdirp } from 'mkdirp';
+import fs from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import compileTemplates from 'vue-docgen-cli/lib/compileTemplates';
 import { extractConfig } from 'vue-docgen-cli/lib/docgen';
 
@@ -48,7 +48,8 @@ export const parseFile = async (
   try {
     let content = '';
     let fileName = file.name;
-    if (fileName === '__index__') {
+
+    if (fileName.endsWith('index')) {
       fileName = 'index';
     }
 
@@ -108,9 +109,10 @@ export const parseVueFile = async (
   const relativePathDest = join(destFolder, file.folder.replace(srcFolder, ''));
   const folderInDest = join(root, relativePathDest);
   const folderInSrc = join(root, file.folder);
+  const vueDocGenCliConf = await extractConfig(join(root, file.folder));
 
   const config = {
-    ...extractConfig(join(root, file.folder)),
+    ...vueDocGenCliConf,
     components: file.name + file.ext
   };
 
@@ -120,11 +122,16 @@ export const parseVueFile = async (
 
   try {
     let fileName = file.name;
-    if (fileName === '__index__') {
+    if (fileName.endsWith('index')) {
       fileName = 'index';
     }
     // parse file
-    const data = await compileTemplates(join(config.componentsRoot, fileName + file.ext), config, fileName + file.ext);
+    const data = await compileTemplates(
+      'add',
+      join(config.componentsRoot, fileName + file.ext),
+      config,
+      fileName + file.ext
+    );
 
     fileContent = parseVuepressFileHeader(
       await fs.readFile(`${join(folderInSrc, fileName + file.ext)}`, 'utf-8'),
