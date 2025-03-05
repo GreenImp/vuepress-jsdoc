@@ -11,9 +11,9 @@ import path from 'node:path';
 import { DirectoryFile, FileTree } from '../interfaces';
 
 /**
- * Recursively traverse folders and return exluded files, a file list and a file tree.
+ * Recursively traverse folders and return excluded files, a file list and a file tree.
  * @param {string} srcPath path to source dir
- * @param {array} exclude exluded file patter list
+ * @param {array} exclude excluded file patter list
  * @param {array} include included file patter list
  * @param {string} mainPath path to hold source dir
  * @param {object} tree tree array
@@ -49,9 +49,10 @@ export const listFolder = async (
   for (const dirent of dirs) {
     const filePath = path.join(srcPath, dirent.name);
     const isDir = dirent.isDirectory();
-    const ext = path.extname(filePath);
-    let name = path.basename(filePath).replace(ext, '');
-    const folder = filePath.replace(name, '').replace(ext, '');
+    const parsed = path.parse(filePath);
+    const ext = parsed.ext;
+    let name = parsed.name;
+    const folder = `${parsed.dir}/`;
 
     if (name.endsWith('index')) {
       name = srcPath.replace(/\//g, '-') + '-' + name;
